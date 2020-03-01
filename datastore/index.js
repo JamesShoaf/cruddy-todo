@@ -2,15 +2,25 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+const Promise = require('bluebird');
+const readFilePromise = Promise.promisify(fs.readFile);
 
 var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  var id = counter.getNextUniqueId();
-  items[id] = text;
-  callback(null, { id, text });
+  counter.getNextUniqueId((error, id) => {
+    var filePath = path.join(exports.dataDir, `${id}.txt`);
+    fs.writeFile(filePath, text, (error) => {
+      if (error) {
+        callback(error, null);
+      }
+      callback(error, { id, text });
+    });
+  });
+  // items[id] = text;
+  // callback(null, { id, text });
 };
 
 exports.readAll = (callback) => {
